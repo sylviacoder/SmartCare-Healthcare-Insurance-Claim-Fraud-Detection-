@@ -1,4 +1,4 @@
-# # SmartCare-Healthcare-Insurance-Claim-Fraud-Detection-
+# SmartCare-Healthcare-Insurance-Claim-Fraud-Detection-
 
 This project is a machine learning application designed to automate medical risk assessment and forecast premium claim costs. The model predicts individual annual insurance claim valuations using demographic indicators, lifestyle profiles, and clinical risk factors collected from historical insurance underwriting data.
 
@@ -61,13 +61,10 @@ The model was evaluated using:
 
 Validation execution output:
 ```bash
-======================================
-       MODEL EVALUATION RESULTS       
-======================================
+MODEL EVALUATION RESULTS       
 Mean Absolute Error (MAE): $1463.58
 Root Mean Squared Error (RMSE): $3067.40
 R2 Score (Variance Explained): 0.9370
-======================================
 ```
 
 Given the structural performance of the ensemble pipeline, the focus of the project was placed on:
@@ -132,7 +129,7 @@ SmartCare-Healthcare-Insurance-Claim-Fraud-Detection-/
 Clone the repository:
 
 ```Bash
-git clone [https://github.com/sylviacoder/SmartCare-Healthcare-Insurance-Claim-Fraud-Detection-.git](https://github.com/sylviacoder/SmartCare-Healthcare-Insurance-Claim-Fraud-Detection-.git)
+git clone https://github.com/sylviacoder/SmartCare-Healthcare-Insurance-Claim-Fraud-Detection-/tree/main
 ```
 ```
 cd SmartCare-Healthcare-Insurance-Claim-Fraud-Detection-
