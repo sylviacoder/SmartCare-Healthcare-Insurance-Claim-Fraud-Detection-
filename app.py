@@ -1,128 +1,133 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import joblib
-import os
 
-# 1. CRISP PAGE CONFIGURATIONS
+
 st.set_page_config(
-    page_title="SmartCare Underwriting Engine",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="SmartCare | Insurance Risk Engine",
+    layout="centered"
 )
 
-# 2. CUSTOM CLEAN UI STYLES (Avoids looking like a basic template)
 st.markdown("""
     <style>
-    .main-header { font-size: 2.2rem; font-weight: 700; color: #1E293B; margin-bottom: 0.25rem; }
-    .sub-header { font-size: 1.05rem; color: #64748B; margin-bottom: 2rem; }
-    .card-container { background-color: #F8FAFC; border: 1px solid #E2E8F0; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1rem; }
-    .metric-box { background-color: #EFF6FF; border: 1px solid #BFDBFE; padding: 1.5rem; border-radius: 0.75rem; text-align: center; }
-    .metric-label { font-size: 0.95rem; font-weight: 600; color: #1E40AF; text-transform: uppercase; letter-spacing: 0.05em; }
-    .metric-value { font-size: 2.4rem; font-weight: 800; color: #1E3A8A; margin-top: 0.25rem; }
+    .main-title {
+        font-size: 38px;
+        font-weight: 700;
+        color: #1E3A8A;
+        text-align: center;
+        margin-bottom: 5px;
+    }
+    .subtitle {
+        font-size: 16px;
+        color: #4B5563;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .metric-box {
+        background-color: #F3F4F6;
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 6px solid #1E3A8A;
+        margin-top: 20px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. PERFORMANCE OPTIMIZED MODEL LOADING
+st.markdown('<div class="main-title">🏥 SmartCare Insurance Risk Engine</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Automated Predictive Underwriting Portal powered by Random Forest Machine Learning</div>', unsafe_allow_html=True)
+
+
 @st.cache_resource
-def load_underwriting_model():
-    model_path = 'health_insurance_model.pkl'
-    if os.path.exists(model_path):
-        return joblib.load(model_path)
-    return None
+def load_model():
+    try:
+        return joblib.load('models/health_insurance_model.pkl')
+    except FileNotFoundError:
+        st.error("⚠️ **Artifact Missing:** 'models/health_insurance_model.pkl' not found! Please ensure you have created a 'models' folder and generated your model into it.")
+        return None
 
-pipeline = load_underwriting_model()
+pipeline = load_model()
 
-# 4. SIDEBAR INPUT CONTROLS (Clean, tactile parameters)
-with st.sidebar:
-    st.image("https://img.icons8.com/external-flatart-icons-flat-flatarticons/128/external-shield-medical-health-care-flatart-icons-flat-flatarticons.png", width=60)
-    st.markdown("### **Risk Parameters**")
-    st.caption("Adjust core biographical metrics to evaluate premium risk variance live.")
-    st.markdown("---")
+if pipeline is not None:
+
+    st.subheader("📋 Applicant Demographic & Medical Profile")
     
-    age = st.slider("Primary Applicant Age", min_value=18, max_value=100, value=35, step=1)
-    weight = st.number_input("Weight (kg)", min_value=30.0, max_value=250.0, value=72.5, step=0.5)
-    bmi = st.number_input("Calculated BMI", min_value=10.0, max_value=60.0, value=24.2, step=0.1)
-    bloodpressure = st.slider("Systolic Blood Pressure", min_value=80, max_value=200, value=120, step=1)
-    no_of_dependents = st.number_input("Dependents Scheduled", min_value=0, max_value=10, value=0, step=1)
-    
-    st.markdown("---")
-    city = st.selectbox("Geographic Rating Area (City)", options=['NewYork', 'Boston', 'Phildelphia', 'Pittsburg', 'Buffalo', 'AtlanticCity', 'Portland', 'Cambridge', 'Hartford', 'Springfield', 'Brimingham', 'Charleston', 'Charlotte', 'Louisville', 'Memphis', 'Nashville', 'NewOrleans'])
-
-# 5. MAIN WORKSPACE HEADER
-st.markdown('<div class="main-header">SmartCare Underwriting Risk Interface</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Automated cost prediction engine built using historical health claim models.</div>', unsafe_allow_html=True)
-
-if pipeline is None:
-    st.error("🚨 Core engine pipeline file (`health_insurance_model.pkl`) not found in the current directory. Please make sure to run your training notebook/script to save the model artifact first.")
-else:
-    # 6. DUAL COLUMN WORKSPACE STRUCTURE
-    col1, col2 = st.columns([5, 4], gap="large")
+    col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown('<div class="card-container">', unsafe_allow_html=True)
-        st.markdown("#### **Clinical & Behavioral Profile**")
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Horizontal toggle configuration for cleaner alignment
-        sub_c1, sub_c2, sub_c3 = st.columns(3)
-        with sub_c1:
-            smoker_input = st.toggle("Nicotine/Smoker", value=False)
-        with sub_c2:
-            diabetes_input = st.toggle("Diagnosed Diabetes", value=False)
-        with sub_c3:
-            exercise_input = st.toggle("Regular Exercise", value=True)
-            
-        st.markdown("<br>", unsafe_allow_html=True)
-        has_hereditary = st.selectbox("Genetic / Hereditary Status", options=["No Stated Hereditary History", "Known Hereditary Condition History"])
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown('<div class="card-container">', unsafe_allow_html=True)
-        st.markdown("#### **Occupational Demographics**")
-        job_category = st.selectbox("Professional Domain Cluster", options=['Office', 'Technical', 'Medical', 'Service', 'Creative', 'Other'])
-        
-        # Under-the-hood feature derivations matching your notebook logic
-        if bmi < 18.5: bmi_grouping = 'Underweight'
-        elif bmi < 25: bmi_grouping = 'Healthy'
-        elif bmi < 30: bmi_grouping = 'Overweight'
-        else: bmi_grouping = 'Obese'
-            
-        st.markdown(f"**Automated Segment Mapping:** `{bmi_grouping}`")
-        st.markdown('</div>', unsafe_allow_html=True)
+        age = st.number_input("Age", min_value=18, max_value=100, value=35, step=1)
+        sex = st.selectbox("Sex / Gender", options=['male', 'female'])
+        weight = st.number_input("Weight (kg)", min_value=30, max_value=200, value=75, step=1)
+        bmi = st.number_input("Body Mass Index (BMI)", min_value=10.0, max_value=60.0, value=25.4, step=0.1)
+        bloodpressure = st.number_input("Systolic Blood Pressure", min_value=80, max_value=220, value=120, step=1)
+        no_of_dependents = st.number_input("Number of Dependents", min_value=0, max_value=10, value=1, step=1)
 
     with col2:
-        st.markdown("#### **Analysis & Premium Valuation**")
-        st.caption("Click below to pass inputs into the Random Forest Regressor framework.")
+        smoker_input = st.selectbox("Tobacco Smoking Status", options=["No", "Yes"])
+        diabetes_input = st.selectbox("Diagnosed with Diabetes?", options=["No", "Yes"])
+        exercise_input = st.selectbox("Engages in Regular Exercise?", options=["No", "Yes"])
+        hereditary_input = st.selectbox("Hereditary Disease Background", options=[
+            "None / NoDisease", "Diabetes", "Alzheimer", "Obesity", "EyeDisease", "Cancer", "Arthritis", "HeartDisease", "Epilepsy", "High BP"
+        ])
+        job_title = st.text_input("Job Title / Occupation", value="Software Engineer")
+        city = st.selectbox("Residential City", options=[
+            "NewYork", "Boston", "Phildelphia", "Pittsburg", "Buffalo", "AtlanticCity", "Portland", "Cambridge", "Hartford"
+        ])
+
+
+    smoker = 1 if smoker_input == "Yes" else 0
+    diabetes = 1 if diabetes_input == "Yes" else 0
+    regular_ex = 1 if exercise_input == "Yes" else 0
+    has_hereditary_disease = 0 if hereditary_input == "None / NoDisease" else 1
+
+    if bmi < 18.5: bmi_grouping = 'Underweight'
+    elif 18.5 <= bmi < 25: bmi_grouping = 'Healthy'
+    elif 25 <= bmi < 30: bmi_grouping = 'Overweight'
+    else: bmi_grouping = 'Obese'
+
+    smoker_age_risk = smoker * age
+
+    title_lower = str(job_title).lower()
+    if any(k in title_lower for k in ['actor', 'singer', 'artist', 'dancer', 'fashion', 'film']): job_category = 'Creative'
+    elif any(k in title_lower for k in ['engineer', 'it', 'software', 'data', 'technician']): job_category = 'Technical'
+    elif any(k in title_lower for k in ['doctor', 'nurse', 'healthcare', 'medical']): job_category = 'Medical'
+    elif any(k in title_lower for k in ['chef', 'cook', 'waiter', 'restaurant', 'service']): job_category = 'Service'
+    elif any(k in title_lower for k in ['manager', 'admin', 'clerk', 'executive', 'office']): job_category = 'Office'
+    else: job_category = 'Other'
+
+
+    st.markdown("---")
+    
+    if st.button("🚀 Calculate Underwriting Valuation", use_container_width=True):
         
-        # Parse inputs into the precise structures expected by your scikit-learn ColumnTransformer
-        smoker = 1.0 if smoker_input else 0.0
-        diabetes = 1.0 if diabetes_input else 0.0
-        regular_ex = 1.0 if exercise_input else 0.0
-        has_hereditary_disease = 1.0 if has_hereditary == "Known Hereditary Condition History" else 0.0
-        smoker_age_risk = smoker * age
-        
-        user_payload = pd.DataFrame([{
-            'age': float(age), 'sex': 'male', 'weight': float(weight), 'bmi': float(bmi),
-            'no_of_dependents': float(no_of_dependents), 'smoker': smoker, 'city': city,
-            'bloodpressure': float(bloodpressure), 'diabetes': diabetes, 'regular_ex': regular_ex,
-            'smoker_age_risk': smoker_age_risk, 'has_hereditary_disease': has_hereditary_disease,
-            'bmi_grouping': bmi_grouping, 'job_category': job_category
+        # Build the exact mapping structure expected by your pipeline
+        input_data = pd.DataFrame([{
+            'age': age,
+            'weight': weight,
+            'bmi': bmi,
+            'no_of_dependents': no_of_dependents,
+            'smoker': smoker,
+            'bloodpressure': bloodpressure,
+            'diabetes': diabetes,
+            'regular_ex': regular_ex,
+            'smoker_age_risk': smoker_age_risk,
+            'has_hereditary_disease': has_hereditary_disease,
+            'sex': sex,
+            'city': city,
+            'bmi_grouping': bmi_grouping,
+            'job_category': job_category
         }])
         
-        st.markdown("<br>", unsafe_allow_html=True)
+        # Execute estimation through the wrapped Scikit-Learn pipeline
+        predicted_claim = pipeline.predict(input_data)[0]
         
-        if st.button("Calculate Expected Insurance Claim", type="primary", use_container_width=True):
-            # Pass the single-row dataframe cleanly directly into your pipeline predict function
-            predicted_claim = pipeline.predict(user_payload)[0]
-            
-            # Render custom styled continuous output component
-            st.markdown(f"""
-                <div class="metric-box">
-                    <div class="metric-label">Predicted Annual Cost Valuation</div>
-                    <div class="metric-value">${predicted_claim:,.2f}</div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            # Domain context text block
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.info("💡 **Underwriting Note:** This output represents the model's localized mean regression baseline score. Actual policy quotes may vary based on structural market adjustments.")
+        st.markdown(f"""
+            <div class="metric-box">
+                <h4 style="margin:0; color:#4B5563;">Estimated Annual Premium Claim Cost:</h4>
+                <p style="font-size:36px; font-weight:800; color:#1E3A8A; margin:5px 0 0 0;">${predicted_claim:,.2f}</p>
+                <small style="color:#6B7280;">Based on your 93.70% variance-confident Random Forest regression pipeline model.</small>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if smoker == 1 and bmi >= 30.0:
+            st.warning("⚠️ **High Risk Interaction Warning:** The applicant is classified as both a tobacco user and clinically obese. The model heavily adjusts calculations upward due to non-linear cost curves for this interaction threshold.")
